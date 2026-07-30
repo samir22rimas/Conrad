@@ -1,0 +1,11 @@
+"use client";
+import { api } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import Link from "next/link";
+export default function ProjectsPage() {
+  const queryClient = useQueryClient(); const [title, setTitle] = useState(""); const [description, setDescription] = useState(""); const [tech, setTech] = useState("");
+  const { data: projects = [] } = useQuery({ queryKey: ["projects"], queryFn: async () => (await api.get("/projects")).data });
+  const create = useMutation({ mutationFn: async () => api.post("/projects", { title, description, techStack: tech.split(",").map(x => x.trim()).filter(Boolean) }), onSuccess: () => { setTitle(""); setDescription(""); setTech(""); queryClient.invalidateQueries({ queryKey: ["projects"] }); } });
+  return <main className="max-w-5xl mx-auto px-6 py-10"><Link href="/dashboard" className="text-sm text-primary">← Dashboard</Link><h1 className="text-3xl font-bold mt-4">Projects</h1><form onSubmit={e => { e.preventDefault(); create.mutate(); }} className="mt-6 p-5 rounded-2xl bg-card border border-border/50 grid gap-3"><input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Project title" className="p-3 rounded bg-muted" /><textarea required value={description} onChange={e => setDescription(e.target.value)} placeholder="What will you build?" className="p-3 rounded bg-muted" /><input value={tech} onChange={e => setTech(e.target.value)} placeholder="Technologies, separated by commas" className="p-3 rounded bg-muted" /><button disabled={create.isPending} className="w-fit px-4 py-2 rounded bg-primary text-primary-foreground">{create.isPending ? "Creating…" : "Create project"}</button></form><div className="grid md:grid-cols-2 gap-4 mt-6">{projects.length ? projects.map((project: any) => <article key={project.id} className="p-5 rounded-2xl bg-card border border-border/50"><p className="text-xs text-primary">{project.status.replace("_", " ")}</p><h2 className="font-semibold text-lg mt-2">{project.title}</h2><p className="text-sm text-muted-foreground mt-2">{project.description}</p><p className="text-xs mt-4">{project.techStack.join(" · ")}</p></article>) : <p className="text-muted-foreground">Create your first project above.</p>}</div></main>;
+}

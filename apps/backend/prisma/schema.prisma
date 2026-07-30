@@ -1,0 +1,461 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String?
+  name          String?
+  avatar        String?
+  role          Role      @default(STUDENT)
+  emailVerified Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile       Profile?
+  chats         Chat[]
+  exercises     ExerciseAttempt[]
+  quizAttempts  QuizAttempt[]
+  flashcards    FlashcardProgress[]
+  projects      Project[]
+  achievements  UserAchievement[]
+  progress      Progress[]
+  sessions      Session[]
+  notifications Notification[]
+  settings      Settings?
+
+  @@map("users")
+}
+
+model Profile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  bio          String?
+  github       String?
+  linkedin     String?
+  website      String?
+  location     String?
+  timezone     String   @default("UTC")
+  preferredLang String  @default("javascript")
+  xp           Int      @default(0)
+  level        Int      @default(1)
+  streak       Int      @default(0)
+  longestStreak Int     @default(0)
+  totalStudyTime Int    @default(0)
+  bugsSolved   Int      @default(0)
+  conceptsMastered Int  @default(0)
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Chat {
+  id          String    @id @default(uuid())
+  userId      String
+  title       String    @default("New Chat")
+  type        ChatType  @default(TUTOR)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    Message[]
+
+  @@map("chats")
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  chatId    String
+  role      MessageRole
+  content   String
+  metadata  Json?    @default("{}")
+  createdAt DateTime @default(now())
+
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  slug        String   @unique
+  category    Category
+  difficulty  Difficulty
+  icon        String?
+  color       String?
+  order       Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessons     Lesson[]
+  progress    Progress[]
+
+  @@map("courses")
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  courseId    String
+  title       String
+  description String
+  slug        String   @unique
+  content     String?
+  order       Int      @default(0)
+  duration    Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  exercises   Exercise[]
+  progress    Progress[]
+
+  @@map("lessons")
+}
+
+model Exercise {
+  id          String     @id @default(uuid())
+  lessonId    String?
+  title       String
+  description String
+  type        ExerciseType
+  difficulty  Difficulty
+  starterCode String?
+  solution    String?
+  hints       String[]
+  testCases   Json?
+  tags        String[]
+  points      Int        @default(10)
+  createdAt   DateTime   @default(now())
+
+  lesson      Lesson?    @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  attempts    ExerciseAttempt[]
+
+  @@map("exercises")
+}
+
+model ExerciseAttempt {
+  id          String   @id @default(uuid())
+  userId      String
+  exerciseId  String
+  code        String?
+  isCorrect   Boolean  @default(false)
+  score       Int      @default(0)
+  timeSpent   Int      @default(0)
+  hintsUsed   Int      @default(0)
+  feedback    String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise    Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@map("exercise_attempts")
+}
+
+model Quiz {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  category    Category
+  difficulty  Difficulty
+  timeLimit   Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  questions   QuizQuestion[]
+  attempts    QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id        String   @id @default(uuid())
+  quizId    String
+  question  String
+  type      QuestionType
+  options   String[]
+  correctAnswer String
+  explanation String?
+  points    Int      @default(1)
+  order     Int      @default(0)
+
+  quiz      Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_questions")
+}
+
+model QuizAttempt {
+  id          String   @id @default(uuid())
+  userId      String
+  quizId      String
+  score       Int      @default(0)
+  maxScore    Int      @default(0)
+  timeSpent   Int      @default(0)
+  answers     Json?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  quiz        Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_attempts")
+}
+
+model Flashcard {
+  id          String   @id @default(uuid())
+  front       String
+  back        String
+  category    Category
+  difficulty  Difficulty
+  tags        String[]
+  createdAt   DateTime @default(now())
+
+  progress    FlashcardProgress[]
+
+  @@map("flashcards")
+}
+
+model FlashcardProgress {
+  id          String   @id @default(uuid())
+  userId      String
+  flashcardId String
+  interval    Int      @default(1)
+  repetitions Int      @default(0)
+  easeFactor  Float    @default(2.5)
+  nextReview  DateTime @default(now())
+  lastReviewed DateTime?
+  isMastered  Boolean  @default(false)
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  flashcard   Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, flashcardId])
+  @@map("flashcard_progress")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  description String
+  techStack   String[]
+  features    String[]
+  roadmap     Json?
+  status      ProjectStatus @default(PLANNING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("projects")
+}
+
+model ProjectIdea {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  difficulty  Difficulty
+  techStack   String[]
+  estimatedHours Int
+  category    Category
+  createdAt   DateTime @default(now())
+
+  @@map("project_ideas")
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  icon        String
+  condition   String
+  points      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  users       UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String   @id @default(uuid())
+  userId        String
+  achievementId String
+  unlockedAt    DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model Progress {
+  id          String   @id @default(uuid())
+  userId      String
+  courseId    String?
+  lessonId    String?
+  status      ProgressStatus @default(NOT_STARTED)
+  mastery     Int      @default(0)
+  timeSpent   Int      @default(0)
+  lastAccessed DateTime @default(now())
+  completedAt DateTime?
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course?  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lesson      Lesson?  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId, lessonId])
+  @@map("progress")
+}
+
+model Session {
+  id          String   @id @default(uuid())
+  userId      String
+  type        SessionType
+  duration    Int      @default(0)
+  topic       String?
+  accuracy    Float?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  message     String
+  type        NotificationType
+  isRead      Boolean  @default(false)
+  data        Json?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model Settings {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  theme               Theme    @default(DARK)
+  language            String   @default("en")
+  aiGuidanceLevel     Int      @default(50)
+  sessionReminders    Boolean  @default(true)
+  achievementAlerts   Boolean  @default(true)
+  weeklyReports       Boolean  @default(false)
+  twoFactorEnabled    Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("settings")
+}
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum ChatType {
+  TUTOR
+  DEBUG
+  REVIEW
+  PROJECT
+}
+
+enum MessageRole {
+  SYSTEM
+  USER
+  ASSISTANT
+}
+
+enum Category {
+  FRONTEND
+  BACKEND
+  PYTHON
+  JAVA
+  ALGORITHMS
+  DATABASES
+  SYSTEM_DESIGN
+  AI
+  CYBERSECURITY
+  DEVOPS
+  JAVASCRIPT
+  TYPESCRIPT
+  C
+  CPP
+  GENERAL
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ExerciseType {
+  CODING
+  MULTIPLE_CHOICE
+  FILL_BLANK
+  DEBUGGING
+  CONCEPTUAL
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  CODE_OUTPUT
+  FILL_BLANK
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  MASTERED
+}
+
+enum SessionType {
+  LEARNING
+  DEBUGGING
+  QUIZ
+  FLASHCARD
+  PROJECT
+}
+
+enum NotificationType {
+  ACHIEVEMENT
+  REMINDER
+  STREAK
+  MILESTONE
+  SYSTEM
+}
+
+enum Theme {
+  LIGHT
+  DARK
+  SYSTEM
+}

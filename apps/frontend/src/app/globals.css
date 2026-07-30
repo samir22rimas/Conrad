@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 6%;
+    --foreground: 227 82% 92%;
+    --card: 222 30% 10%;
+    --card-foreground: 227 82% 92%;
+    --popover: 222 30% 10%;
+    --popover-foreground: 227 82% 92%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 145 100% 10%;
+    --secondary: 239 100% 75%;
+    --secondary-foreground: 244 100% 20%;
+    --muted: 222 25% 15%;
+    --muted-foreground: 220 15% 55%;
+    --accent: 192 80% 50%;
+    --accent-foreground: 192 100% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 222 20% 20%;
+    --input: 222 20% 15%;
+    --ring: 142 71% 45%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground antialiased; }
+  ::selection { @apply bg-primary/30 text-primary-foreground; }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  }
+  .glass {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+  }
+  .glow-primary {
+    box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.3);
+  }
+}

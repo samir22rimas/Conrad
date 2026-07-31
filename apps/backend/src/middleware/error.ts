@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { Prisma } from '@prisma/client';
 
 export interface ApiError extends Error {
   statusCode?: number;
@@ -19,11 +18,12 @@ export const errorHandler = (
 
   // Return actionable, safe errors for expected database conflicts without
   // exposing connection details, table names, or query information.
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    if (err.code === 'P2002') {
+  const prismaCode = err.code;
+  if (prismaCode) {
+    if (prismaCode === 'P2002') {
       statusCode = 409;
       message = 'A record with those details already exists';
-    } else if (err.code === 'P2025') {
+    } else if (prismaCode === 'P2025') {
       statusCode = 404;
       message = 'Record not found';
     }

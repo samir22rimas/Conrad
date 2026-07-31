@@ -1,4 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "corepack enable && corepack prepare pnpm@9.15.4 --activate && pnpm install --no-frozen-lockfile"
+  "installCommand": "npm install --workspace=@conrad/frontend",
+  "buildCommand": "npm run build --workspace=@conrad/frontend",
+  "outputDirectory": "apps/frontend/.next"
 }

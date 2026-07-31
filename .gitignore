@@ -45,3 +45,6 @@ apps/backend/prisma/migrations/*
 # Logs
 logs
 *.log
+
+collect.py
+all_files.txt

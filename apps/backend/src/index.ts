@@ -26,7 +26,7 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
   throw new Error('JWT_SECRET must be at least 32 characters. Generate with: openssl rand -base64 64');
 }
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT || 4000;
 
 // SEC-008 FIX: Enhanced Helmet with CSP
@@ -120,8 +120,14 @@ app.use((_req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
+export const startServer = () => app.listen(PORT, () => {
   console.log(`Conrad API running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
 });
+
+// Keep importing the Express app side-effect free. This lets tests use
+// Supertest without opening a network port and prevents duplicate listeners.
+if (require.main === module) {
+  startServer();
+}
 
 export default app;

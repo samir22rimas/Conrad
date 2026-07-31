@@ -7,6 +7,7 @@ import { supabase } from '../lib/supabase';
 import { validate } from '../middleware/validate';
 import { asyncHandler } from '../middleware/error';
 import rateLimit from 'express-rate-limit';
+import { authenticate, type AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -26,6 +27,17 @@ const signupSchema = z.object({
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string()
+    .min(12, 'Password must be at least 12 characters')
+    .max(128, 'Password too long')
+    .regex(/[A-Z]/, 'Must contain uppercase letter')
+    .regex(/[a-z]/, 'Must contain lowercase letter')
+    .regex(/[0-9]/, 'Must contain number')
+    .regex(/[^A-Za-z0-9]/, 'Must contain special character'),
 });
 
 // SEC-005 FIX: Strict rate limiting for auth endpoints
@@ -183,6 +195,20 @@ router.post('/google', authLimiter, asyncHandler(async (req, res) => {
     },
     token,
   });
+}));
+
+// Authenticated password changes do not depend on an external email provider.
+router.post('/change-password', authenticate, validate(changePasswordSchema), asyncHandler(async (req: AuthRequest, res) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { password: true } });
+  if (!user?.password || !(await bcrypt.compare(req.body.currentPassword, user.password))) {
+    return res.status(401).json({ error: 'Current password is incorrect' });
+  }
+  await prisma.user.update({
+    where: { id: req.user!.id },
+    data: { password: await bcrypt.hash(req.body.newPassword, 12) },
+  });
+  auditLog('PASSWORD_CHANGED', req.user!.id, {}, req);
+  res.status(204).send();
 }));
 
 // Get current user

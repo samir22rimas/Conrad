@@ -14,6 +14,11 @@ const createSchema = z.object({
   techStack: z.array(z.string()),
 });
 
+const updateSchema = createSchema.partial().extend({
+  status: z.enum(['PLANNING', 'IN_PROGRESS', 'COMPLETED', 'ARCHIVED']).optional(),
+  features: z.array(z.string().max(200)).max(30).optional(),
+});
+
 router.get('/', asyncHandler(async (req: AuthRequest, res) => {
   const projects = await prisma.project.findMany({
     where: { userId: req.user!.id },
@@ -31,6 +36,22 @@ router.post('/', validate(createSchema), asyncHandler(async (req: AuthRequest, r
     },
   });
   res.status(201).json(project);
+}));
+
+router.patch('/:id', validate(updateSchema), asyncHandler(async (req: AuthRequest, res) => {
+  const updated = await prisma.project.updateMany({
+    where: { id: req.params.id, userId: req.user!.id },
+    data: req.body,
+  });
+  if (!updated.count) return res.status(404).json({ error: 'Project not found' });
+  const project = await prisma.project.findUnique({ where: { id: req.params.id } });
+  res.json(project);
+}));
+
+router.delete('/:id', asyncHandler(async (req: AuthRequest, res) => {
+  const deleted = await prisma.project.deleteMany({ where: { id: req.params.id, userId: req.user!.id } });
+  if (!deleted.count) return res.status(404).json({ error: 'Project not found' });
+  res.status(204).send();
 }));
 
 router.get('/ideas', asyncHandler(async (req, res) => {

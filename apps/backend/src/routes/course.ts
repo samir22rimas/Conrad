@@ -64,6 +64,10 @@ router.get('/:slug/lessons/:lessonSlug', asyncHandler(async (req: AuthRequest, r
     return res.status(404).json({ error: 'Lesson not found' });
   }
 
+  if (lesson.course.slug !== req.params.slug) {
+    return res.status(404).json({ error: 'Lesson not found in this course' });
+  }
+
   // Get user's progress for this lesson
   // FIX: Use findFirst instead of findUnique — composite unique with null courseId
   // doesn't work reliably with Prisma's compound key finder

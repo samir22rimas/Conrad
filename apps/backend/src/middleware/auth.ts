@@ -23,7 +23,11 @@ export const authenticate = async (
     }
 
     const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!, {
+      issuer: 'conrad-api',
+      audience: 'conrad-app',
+      clockTolerance: 60,
+    }) as {
       userId: string;
       email: string;
       role: string;

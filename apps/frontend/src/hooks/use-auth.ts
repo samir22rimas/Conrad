@@ -37,9 +37,9 @@ export function useAuth() {
       }
       return data.user;
     },
-    onSuccess: () => {
+    onSuccess: (user) => {
       queryClient.invalidateQueries({ queryKey: ["auth"] });
-      router.push("/dashboard");
+      router.push(user.profile?.onboardingCompleted ? "/dashboard" : "/onboarding");
     },
   });
 
@@ -53,7 +53,7 @@ export function useAuth() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["auth"] });
-      router.push("/dashboard");
+      router.push("/onboarding");
     },
   });
 

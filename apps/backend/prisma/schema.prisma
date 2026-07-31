@@ -43,6 +43,10 @@ model Profile {
   location     String?
   timezone     String   @default("UTC")
   preferredLang String  @default("javascript")
+  experience   String?
+  learningGoals String[] @default([])
+  teachingStyle String?
+  onboardingCompleted Boolean @default(false)
   xp           Int      @default(0)
   level        Int      @default(1)
   streak       Int      @default(0)

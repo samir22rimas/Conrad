@@ -22,7 +22,7 @@ export default function DashboardPage() {
   return <div className="min-h-screen bg-background pb-16">
     <header className="glass border-b border-border/50"><div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
       <Link href="/dashboard" className="flex items-center gap-2"><Terminal className="w-6 h-6 text-primary" /><span className="text-xl font-bold">Conrad</span></Link>
-      <div className="flex items-center gap-4"><span className="text-sm text-muted-foreground hidden sm:block">Welcome back, {user?.name}</span><Link href="/tutor" className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium">New session</Link></div>
+      <div className="flex items-center gap-3"><Link href="/history" className="text-sm text-muted-foreground hover:text-foreground">History</Link><Link href="/profile" className="text-sm text-muted-foreground hover:text-foreground hidden sm:inline">Profile</Link><Link href="/settings" className="text-sm text-muted-foreground hover:text-foreground hidden sm:inline">Settings</Link><Link href="/tutor" className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium">New session</Link></div>
     </div></header>
     <main className="max-w-7xl mx-auto px-6 py-8 space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">{cards.map(([label, value, Icon, color]) => <div key={label} className="p-4 rounded-2xl bg-card border border-border/50"><div className="flex gap-2 items-center text-xs text-muted-foreground uppercase"><Icon className={`w-4 h-4 ${color}`} />{label}</div><p className="mt-2 text-2xl font-bold">{value}</p></div>)}</div>

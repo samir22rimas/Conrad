@@ -16,6 +16,7 @@ const createChatSchema = z.object({
 const sendMessageSchema = z.object({
   content: z.string().min(1).max(5000), // SEC-007 FIX: Limit message size
 });
+const renameChatSchema = z.object({ title: z.string().min(1).max(200) });
 
 // SEC-004 FIX: Input sanitization helper
 const sanitizeContent = (content: string): string => {
@@ -163,6 +164,15 @@ router.delete('/:id', asyncHandler(async (req: AuthRequest, res) => {
     where: { id: req.params.id, userId: req.user!.id },
   });
   res.status(204).send();
+}));
+
+router.patch('/:id', validate(renameChatSchema), asyncHandler(async (req: AuthRequest, res) => {
+  const updated = await prisma.chat.updateMany({
+    where: { id: req.params.id, userId: req.user!.id },
+    data: { title: req.body.title },
+  });
+  if (!updated.count) return res.status(404).json({ error: 'Chat not found' });
+  res.json({ success: true });
 }));
 
 export { router as chatRouter };

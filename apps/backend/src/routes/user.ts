@@ -15,6 +15,16 @@ const updateProfileSchema = z.object({
   website: z.string().url().optional().nullable(),
   location: z.string().max(100).optional(),
   preferredLang: z.string().optional(),
+  experience: z.enum(['COMPLETE_BEGINNER', 'BEGINNER', 'INTERMEDIATE', 'ADVANCED']).optional(),
+  learningGoals: z.array(z.string().min(1).max(80)).max(6).optional(),
+  teachingStyle: z.enum(['MORE_HINTS', 'DETAILED_EXPLANATIONS', 'INTERACTIVE_QUESTIONING', 'FAST_LEARNING']).optional(),
+});
+
+const onboardingSchema = z.object({
+  experience: z.enum(['COMPLETE_BEGINNER', 'BEGINNER', 'INTERMEDIATE', 'ADVANCED']),
+  preferredLang: z.string().min(1).max(50),
+  learningGoals: z.array(z.string().min(1).max(80)).min(1).max(6),
+  teachingStyle: z.enum(['MORE_HINTS', 'DETAILED_EXPLANATIONS', 'INTERACTIVE_QUESTIONING', 'FAST_LEARNING']),
 });
 
 const updateSettingsSchema = z.object({
@@ -68,6 +78,9 @@ router.patch('/profile', validate(updateProfileSchema), asyncHandler(async (req:
           website: req.body.website,
           location: req.body.location,
           preferredLang: req.body.preferredLang,
+          experience: req.body.experience,
+          learningGoals: req.body.learningGoals,
+          teachingStyle: req.body.teachingStyle,
         },
       },
     },
@@ -75,6 +88,16 @@ router.patch('/profile', validate(updateProfileSchema), asyncHandler(async (req:
   });
 
   res.json(user);
+}));
+
+// Complete the first-run learner setup.
+router.post('/onboarding', validate(onboardingSchema), asyncHandler(async (req: AuthRequest, res) => {
+  const profile = await prisma.profile.upsert({
+    where: { userId: req.user!.id },
+    create: { userId: req.user!.id, ...req.body, onboardingCompleted: true },
+    update: { ...req.body, onboardingCompleted: true },
+  });
+  res.json(profile);
 }));
 
 // Get settings

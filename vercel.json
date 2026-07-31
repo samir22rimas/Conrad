@@ -2,5 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install --workspace=@conrad/frontend",
   "buildCommand": "npm run build --workspace=@conrad/frontend",
-  "outputDirectory": "apps/frontend/.next"
+  "outputDirectory": ".next"
 }
